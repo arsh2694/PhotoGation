@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PhotoGation & HTML Interpreter</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #87CEEB;
+      min-height: 100vh;
+      padding: 20px 10px;
+    }
+
+    .main-container {
+      background: rgba(240, 250, 255, 0.6);
+      border-radius: 16px;
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.1);
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      background: rgba(255, 255, 255, 0.3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 20px;
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      font-weight: bold;
+      color: #002244;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab-button.active {
+      background: rgba(255, 255, 255, 0.2);
+      border-bottom-color: #4b8dff;
+    }
+
+    .tab-button:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+      padding: 30px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* PhotoGation Styles */
+    .photogation-content {
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #222;
+    }
+
+    video, canvas {
+      width: 100%;
+      max-width: 640px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    button, .html-link {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #002244;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      margin: 10px 5px;
+      text-decoration: none;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    button:hover, .html-link:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.03);
+    }
+
+    input {
+      padding: 12px;
+      width: 90%;
+      max-width: 500px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.505);
+    }
+
+    video { transform: scaleX(-1); }
+    canvas { display: none; }
+
+    #retake { display: none; }
+
+    #output, #out {
+      margin-top: 15px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    hr.section-divider {
+      margin: 40px 0;
+      border: none;
+      height: 2px;
+      background: #ccc;
+      border-radius: 10px;
+    }
+
+    /* HTML Interpreter Styles */
+    .interpreter-content {
+      height: 70vh;
+      display: flex;
+      gap: 20px;
+    }
+
+    .interpreter-panel {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      overflow-y: auto;
+    }
+
+    .interpreter-panel h3 {
+      margin-bottom: 15px;
+      color: #002244;
+      text-align: center;
+    }
+
+    #htmlInput {
+      width: 100%;
+      height: 100%;
+      font-size: 14px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      resize: none;
+      background: rgba(255, 255, 255, 0.505);
+      font-family: 'Courier New', monospace;
+    }
+
+    #htmlInput:focus {
+      outline: 2px solid #4b8dff;
+    }
+
+    #htmlOutput {
+      color: #002244;
+      font-size: 14px;
+      word-wrap: break-word;
+      height: calc(100% - 40px);
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .interpreter-content {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .interpreter-panel {
+        height: 300px;
+      }
+
+      .tab-button {
+        font-size: 14px;
+        padding: 15px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-button active" onclick="switchTab('photogation')">📸 PhotoGation</button>
+      <button class="tab-button" onclick="switchTab('interpreter')">🔧 HTML Interpreter</button>
+    </div>
+
+    <!-- PhotoGation Tab Content -->
+    <div id="photogation" class="tab-content active">
+      <div class="photogation-content">
+        <h1>PhotoGation</h1>
+
+        <video id="video" autoplay muted></video>
+        <canvas id="canvas" width="640" height="480"></canvas><br>
+        <button id="capture" onclick="capture()">Capture Photo</button>
+        <button id="retake" onclick="retake()">Retake</button>
+
+        <hr class="section-divider">
+
+        <input type="text" id="destination" placeholder="Enter address or place">
+        <br>
+        <button onclick="getGeolocation()">Get Coordinates</button>
+        <button onclick="showRoute()">Show Route on Google Maps</button>
+        <div id="output"></div>
+
+        <button onclick="geo()">Get Current Location</button>
+        <p id="out"></p>
+
+        <hr class="section-divider">
+        <h3>Send WhatsApp Message</h3>
+        <input type="text" id="whatsappNumber" placeholder="Enter phone number (with country code)">
+        <input type="text" id="whatsappMessage" placeholder="Enter message to send">
+        <br>
+        <button onclick="sendWhatsApp()">Send via WhatsApp</button>
+      </div>
+    </div>
+
+    <!-- HTML Interpreter Tab Content -->
+    <div id="interpreter" class="tab-content">
+      <div class="interpreter-content">
+        <div class="interpreter-panel">
+          <h3>HTML Code Input</h3>
+          <textarea id="htmlInput" placeholder="Type your HTML code here..." oninput="updateOutput()"></textarea>
+        </div>
+        <div class="interpreter-panel">
+          <h3>Live Preview</h3>
+          <div id="htmlOutput"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching functionality
+    function switchTab(tabName) {
+      // Hide all tab contents
+      const tabContents = document.querySelectorAll('.tab-content');
+      tabContents.forEach(content => content.classList.remove('active'));
+
+      // Remove active class from all tab buttons
+      const tabButtons = document.querySelectorAll('.tab-button');
+      tabButtons.forEach(button => button.classList.remove('active'));
+
+      // Show selected tab content
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // PhotoGation functionality
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const captureBtn = document.getElementById('capture');
+    const retakeBtn = document.getElementById('retake');
+    const destinationInput = document.getElementById('destination');
+    const output = document.getElementById('output');
+    const out = document.getElementById('out');
+
+    let currentLat = null;
+    let currentLng = null;
+
+    // Initialize camera when PhotoGation tab is first loaded
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      video.srcObject = stream;
+    }).catch(() => alert("Unable to access the camera."));
+
+    // Get initial location
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+      },
+      () => alert("Location access denied.")
+    );
+
+    function capture() {
+      ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      video.style.display = 'none';
+      canvas.style.display = 'block';
+      captureBtn.style.display = 'none';
+      retakeBtn.style.display = 'inline';
+
+      const link = document.createElement('a');
+      link.download = 'captured-photo.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function retake() {
+      video.style.display = 'block';
+      canvas.style.display = 'none';
+      captureBtn.style.display = 'inline';
+      retakeBtn.style.display = 'none';
+    }
+
+    function getGeolocation() {
+      const destination = destinationInput.value.trim();
+      if (!destination) return alert("Please enter an address.");
+
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}`;
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data.length > 0) {
+            const lat = data[0].lat;
+            const lon = data[0].lon;
+            output.textContent = `Geolocation of "${destination}": Latitude = ${lat}, Longitude = ${lon}`;
+          } else {
+            output.textContent = "Location not found.";
+          }
+        })
+        .catch(() => {
+          output.textContent = "Error fetching geolocation.";
+        });
+    }
+
+    function showRoute() {
+      const destination = destinationInput.value.trim();
+      if (!destination) return alert("Please enter a destination.");
+
+      if (currentLat && currentLng) {
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+        window.open(mapsUrl, '_blank');
+      } else {
+        alert("Current location unavailable.");
+      }
+    }
+
+    function geo() {
+      navigator.geolocation.getCurrentPosition(p =>
+        out.innerText = `Lat: ${p.coords.latitude}, Lon: ${p.coords.longitude}`
+      );
+    }
+
+    function sendWhatsApp() {
+      const phone = document.getElementById('whatsappNumber').value.trim();
+      const message = document.getElementById('whatsappMessage').value.trim();
+
+      if (!phone || !message) return alert("Please enter both phone number and message.");
+
+      const cleaned = phone.replace(/[^\d]/g, '');
+      const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    }
+
+    // HTML Interpreter functionality
+    function updateOutput() {
+      const input = document.getElementById("htmlInput");
+      const output = document.getElementById("htmlOutput");
+      output.innerHTML = input.value;
+    }
+  </script>
+
+</body>
+</html>
